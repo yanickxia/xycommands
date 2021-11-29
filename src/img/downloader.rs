@@ -7,6 +7,7 @@ use reqwest::get;
 
 use tokio::io::AsyncReadExt;
 use html_parser::{Dom, Node};
+use image::GenericImageView;
 use log::{debug, info};
 use url::{Url};
 use urlencoding::decode;
@@ -47,9 +48,19 @@ pub async fn download_page_images(url: &str, path: Option<&str>) -> Result<(), B
         std::fs::create_dir(save_path).unwrap();
     }
 
+    let client = reqwest::ClientBuilder::new()
+        .gzip(true)
+        .build().unwrap();
+
     for item in download_urls {
         info!("download img {}", item);
-        let bytes = reqwest::get(url).await?.bytes().await?;
+        let bytes = client.get(item.as_str()).send().await?.bytes().await?;
+
+        let item_image = image::load_from_memory(&bytes)?;
+        let (x, y) = item_image.dimensions();
+        if x < 100 || y < 100 {
+            continue;
+        }
 
         // get filename
         let image_url = Url::parse(item.as_str())?;
