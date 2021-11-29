@@ -18,8 +18,11 @@ jobs:
         run: cargo test --verbose
       - name: Release
         run: cargo build --release
+      - name: Set outputs
+        id: vars
+        run: echo "::set-output name=sha_short::$(git rev-parse --short HEAD)"
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
-          automatic_release_tag: "Dev-Build-${{ steps.date.outputs.date }}"
+          automatic_release_tag: "Dev-Build-${{ steps.vars.outputs.sha_short }}"
