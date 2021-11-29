@@ -18,9 +18,6 @@ jobs:
         run: cargo test --verbose
       - name: Release
         run: cargo build --release
-  release:
-    runs-on: ubuntu-latest
-    steps:
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
