@@ -11,18 +11,20 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
-    - name: Run tests
-      run: cargo test --verbose
-    - name: Release
-      run: cargo build --release
-    - uses: "marvinpinto/action-automatic-releases@latest"
-      with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        prerelease: false
-        files: |
-          target/release/xycommands
+      - uses: actions/checkout@v2
+      - name: Run tests
+        run: cargo test --verbose
+      - name: Release
+        run: cargo build --release
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          automatic_release_tag: "latest"
+          files: |
+            target/release/xycommands
