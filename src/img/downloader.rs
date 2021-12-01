@@ -95,6 +95,7 @@ impl Downloader {
                 Ok(mut file) => {
                     file.write_all(bytes.as_ref())?;
                     app.finish += 1;
+                    app.logs.next();
                     app.display()?;
                 }
             };

@@ -10,7 +10,7 @@ use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, Gauge, List, ListItem, ListState};
 
-struct StatefulList<T> {
+pub struct StatefulList<T> {
     state: ListState,
     items: Vec<T>,
 }
@@ -23,7 +23,7 @@ impl<T> StatefulList<T> {
         }
     }
 
-    fn next(&mut self) {
+    pub fn next(&mut self) {
         let i = match self.state.selected() {
             Some(i) => {
                 if i >= self.items.len() - 1 {
@@ -57,7 +57,7 @@ impl<T> StatefulList<T> {
 }
 
 pub struct App {
-    logs: StatefulList<String>,
+    pub logs: StatefulList<String>,
     pub total: usize,
     pub finish: usize,
     terminal: Terminal<TermionBackend<RawTerminal<Stdout>>>,
@@ -148,7 +148,7 @@ impl App {
                     .bg(Color::LightGreen)
                     .add_modifier(Modifier::BOLD),
             )
-            .start_corner(Corner::BottomLeft);
+            .start_corner(Corner::TopLeft);
 
         f.render_stateful_widget(list, chunks[1], &mut logs.state);
     }
