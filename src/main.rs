@@ -1,15 +1,17 @@
 extern crate clap;
 
 use std::error::Error;
-use clap::{App, Arg, SubCommand};
-use env_logger::*;
-use log::{error};
 
+use clap::{App, Arg, SubCommand};
+use log::error;
+
+mod ui;
 mod img;
+
 
 #[tokio::main]
 async fn main() {
-    env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
+    // env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
 
     match run().await {
         Ok(_) => {}
@@ -24,19 +26,6 @@ async fn run() -> Result<(), Box<dyn Error>> {
         .version("1.0")
         .author("Yanick Xia. <me.yan.xia@qq.com>")
         .about("Does awesome things")
-        // .arg(Arg::with_name("config")
-        //     .short("c")
-        //     .long("config")
-        //     .value_name("FILE")
-        //     .help("Sets a custom config file")
-        //     .takes_value(true))
-        // .arg(Arg::with_name("output")
-        //     .help("Sets an optional output file")
-        //     .index(1))
-        // .arg(Arg::with_name("debug")
-        //     .short("d")
-        //     .multiple(true)
-        //     .help("Turn debugging information on"))
         .subcommand(SubCommand::with_name("img")
             .about("img commands")
             .help("img commands")
@@ -50,6 +39,9 @@ async fn run() -> Result<(), Box<dyn Error>> {
                 )))
         .get_matches();
 
+    let app = ui::display::App::new(100)?;
+    let mut downloader = img::downloader::Downloader::new(app);
+
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level app
     if let Some(matches) = matches.subcommand_matches("img") {
@@ -57,7 +49,7 @@ async fn run() -> Result<(), Box<dyn Error>> {
             match matches.value_of("url") {
                 None => {}
                 Some(url) => {
-                    img::downloader::download_page_images(url, Option::None).await?
+                    downloader.download_page_images(url, Option::None).await?
                 }
             }
         }
