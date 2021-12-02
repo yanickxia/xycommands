@@ -2,11 +2,12 @@ extern crate clap;
 
 use std::borrow::BorrowMut;
 use std::error::Error;
-use std::sync::Arc;
+use std::sync::{Arc, mpsc};
 
 use clap::{App, Arg, SubCommand};
 use env_logger::*;
 use log::{error, info};
+use termion::event::Key;
 
 mod ui;
 mod img;
@@ -45,9 +46,12 @@ async fn run() -> Result<(), Box<dyn Error>> {
     let app = ui::display::App::new(100)?;
     let mut downloader = img::downloader::Downloader::new(app);
 
+
+    let (tx, rx) = mpsc::channel();
+    let ctx = tx.clone();
     tokio::spawn(async {
         let mut key = ui::key::KeyBoard::new();
-        key.run_background();
+        key.run_background(ctx, rx);
     });
 
     // You can check for the existence of subcommands, and if found use their
@@ -63,5 +67,6 @@ async fn run() -> Result<(), Box<dyn Error>> {
         }
     }
 
+    tx.send(Key::Char('q'))?;
     Ok(())
 }
