@@ -3,6 +3,7 @@ use std::error::Error;
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
+use std::sync::Arc;
 
 use html_parser::{Dom, Node};
 use image::GenericImageView;
@@ -14,15 +15,18 @@ use crate::ui::display;
 
 pub struct Downloader {
     app: display::App,
-    state: State,
 }
 
 impl Downloader {
     pub fn new(app: display::App) -> Self {
-        Downloader { app, state: State::RUNNING }
+        Downloader { app }
     }
 
     pub async fn download_page_images(&mut self, url: &str, path: Option<&str>) -> Result<(), Box<dyn Error>> {
+        let app = self.app.borrow_mut();
+        app.display()?;
+
+
         let body = reqwest::get(url).await?
             .text().await?;
         let dom = Dom::parse(body.as_str())?;
@@ -48,7 +52,7 @@ impl Downloader {
             download_urls.push(download_url);
         }
 
-        let app = self.app.borrow_mut();
+
         app.total = download_urls.len();
         app.finish = 0;
 
@@ -67,10 +71,15 @@ impl Downloader {
             .gzip(true)
             .build().unwrap();
 
+
         for item in download_urls {
-            if self.state == State::STOP {
-                return Ok(());
+            let running = Arc::clone(&crate::state::RUNNING);
+            let guard = running.lock().unwrap();
+
+            if *guard == false {
+                break;
             }
+            std::mem::drop(guard);
 
             app.append_log(format!("download img {}", item));
             let bytes = client.get(item.as_str()).send().await?.bytes().await?;
@@ -100,6 +109,8 @@ impl Downloader {
                 }
             };
         }
+
+        app.exit()?;
 
         Ok(())
     }

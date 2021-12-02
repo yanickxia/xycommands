@@ -1,18 +1,21 @@
 extern crate clap;
 
+use std::borrow::BorrowMut;
 use std::error::Error;
+use std::sync::Arc;
 
 use clap::{App, Arg, SubCommand};
-use log::error;
+use env_logger::*;
+use log::{error, info};
 
 mod ui;
 mod img;
+mod state;
 
 
 #[tokio::main]
 async fn main() {
-    // env_logger::Builder::from_env(Env::default().default_filter_or("debug")).init();
-
+    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
     match run().await {
         Ok(_) => {}
         Err(err) => {
@@ -42,6 +45,11 @@ async fn run() -> Result<(), Box<dyn Error>> {
     let app = ui::display::App::new(100)?;
     let mut downloader = img::downloader::Downloader::new(app);
 
+    tokio::spawn(async {
+        let mut key = ui::key::KeyBoard::new();
+        key.run_background();
+    });
+
     // You can check for the existence of subcommands, and if found use their
     // matches just as you would the top level app
     if let Some(matches) = matches.subcommand_matches("img") {
@@ -54,5 +62,6 @@ async fn run() -> Result<(), Box<dyn Error>> {
             }
         }
     }
+
     Ok(())
 }

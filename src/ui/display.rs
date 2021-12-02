@@ -88,8 +88,13 @@ impl App {
     }
 }
 
-
 impl App {
+    pub fn exit(&mut self) -> Result<(), io::Error> {
+        let terminal = self.terminal.borrow_mut();
+        terminal.clear();
+        terminal.show_cursor()
+    }
+
     pub fn display(&mut self) -> Result<(), io::Error> {
         let frame = self.terminal.borrow_mut();
         frame.draw(|f| {
